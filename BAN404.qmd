@@ -1,0 +1,71 @@
+---
+title: "BAN404 - Mandatory"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, cache = F)
+```
+
+## Nessesary libraries
+
+```{r, eval=T, error=TRUE, message=TRUE}
+
+
+
+
+```
+
+
+# Walmart's Weekly Sales
+
+## Problem 1
+
+```{r, eval=T, error=TRUE, message=TRUE}
+
+
+
+```
+
+
+## Problem 2
+
+
+```{r, eval=T, error=TRUE, message=TRUE}
+
+
+
+```
+
+## Problem 3
+
+```{r, eval=T, error=TRUE, message=TRUE}
+
+
+```
+
+## Problem 10
+
+```{r, eval=T, error=TRUE, message=TRUE}
+
+
+```
+
+## Problem 11
+
+```{r, eval=T, error=TRUE, message=TRUE}
+
+
+
+
+
+```
+
+
+#### Session info
+
+Leave this part unchanged. The cell below prints which packages and versions were used for creating the html-file. 
+
+```{r, eval=T}
+sessionInfo()
+```
