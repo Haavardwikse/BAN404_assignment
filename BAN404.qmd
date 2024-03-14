@@ -10,16 +10,142 @@ knitr::opts_chunk$set(echo = TRUE, cache = F)
 ## Nessesary libraries
 
 ```{r, eval=T, error=TRUE, message=TRUE}
+# Loading necessary libraries
+library(Ecdat)       # For the Wages dataset
+library(ggplot2)     # For data visualization
+library(dplyr)       # For data manipulation
+library(caret)       # For data splitting, training, and cross-validation
+library(glmnet)      # For Ridge regression and LASSO
+library(mgcv)        # For generalized additive models (GAM)
+library(rpart)       # For regression trees
+library(rpart.plot)  # For plotting regression trees
+library(MASS)        # For linear discriminant analysis (LDA)
+library(randomForest) # For random forest models, optional for advanced analysis
+library(patchwork)
+
+```
+
+
+# Problem 1
+
+## a)
+
+```{r, eval=T, error=TRUE, message=TRUE}
+
+
+# Load the Wages dataset
+data(Wages)
+
+# Explore the structure of the dataset to identify potential predictors
+str(Wages)
+
+# List of predictors you want to plot against lwage
+selected_predictors <- c("exp", "wks", "bluecol", "ind", "south", "smsa", "married", "sex", "union", "black")
+
+# Initialize an empty list to store plots
+plots_list <- list()
+
+# Loop through each predictor, create a plot, and add it to the list
+for(predictor in selected_predictors) {
+  plots_list[[predictor]] <- ggplot(Wages, aes_string(x=predictor, y="lwage")) +
+    geom_point(alpha=0.2) +
+    geom_smooth(method="lm", se=FALSE, color="blue") +
+    labs(title=paste("lwage vs.", predictor), x=predictor, y="Log Wage")
+}
+
+# Use patchwork to combine the plots
+combined_plot <- wrap_plots(plots_list, ncol = 3)
+
+# Display the combined plot
+combined_plot
+
+
+# Dynamically build the formula with polynomial terms for 'exp' and 'ed'
+formula_str <- paste("lwage ~", paste(selected_predictors, collapse=" + "))
+
+# Convert string to formula
+formula <- as.formula(formula_str)
+
+# Fit the linear regression model with polynomial terms
+model <- lm(formula, data=Wages)
+summary(model)
+
+
+# Interpret the model output
+# Look at the coefficients to understand the effect of each predictor on lwage
+# Pay special attention to the predictors with non-linear terms (e.g., I(predictor1^2))
+# Assess the model's overall fit (e.g., R-squared) and individual predictors' significance (p-values)
+
+
+```
+
+
+## b)
+
+
+```{r, eval=T, error=TRUE, message=TRUE}
+
+
+
+```
+
+## c)
+
+```{r, eval=T, error=TRUE, message=TRUE}
+
+
+```
+
+## d)
+
+```{r, eval=T, error=TRUE, message=TRUE}
+
+
+```
+
+## e)
+
+```{r, eval=T, error=TRUE, message=TRUE}
+
 
 
 
 
 ```
 
+## f)
 
-# Walmart's Weekly Sales
+```{r, eval=T, error=TRUE, message=TRUE}
 
-## Problem 1
+
+
+
+
+```
+
+## g)
+
+```{r, eval=T, error=TRUE, message=TRUE}
+
+
+
+
+
+```
+
+## h)
+
+```{r, eval=T, error=TRUE, message=TRUE}
+
+
+
+
+
+```
+
+# Problem 2
+
+## a)
 
 ```{r, eval=T, error=TRUE, message=TRUE}
 
@@ -28,7 +154,7 @@ knitr::opts_chunk$set(echo = TRUE, cache = F)
 ```
 
 
-## Problem 2
+## b)
 
 
 ```{r, eval=T, error=TRUE, message=TRUE}
@@ -37,21 +163,21 @@ knitr::opts_chunk$set(echo = TRUE, cache = F)
 
 ```
 
-## Problem 3
+## c)
 
 ```{r, eval=T, error=TRUE, message=TRUE}
 
 
 ```
 
-## Problem 10
+## d)
 
 ```{r, eval=T, error=TRUE, message=TRUE}
 
 
 ```
 
-## Problem 11
+## e)
 
 ```{r, eval=T, error=TRUE, message=TRUE}
 
