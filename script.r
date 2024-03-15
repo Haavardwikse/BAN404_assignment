@@ -1,16 +1,5 @@
----
-title: "BAN404 - Mandatory"
-output: html_document
----
-
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(echo = TRUE, cache = F)
-```
-
 ## Nessesary libraries
 
-```{r, eval=T, error=TRUE, message=TRUE}
-#| warning: false
 # Loading necessary libraries
 library(Ecdat)       # For the Wages dataset
 library(ggplot2)     # For data visualization
@@ -23,15 +12,12 @@ library(rpart.plot)  # For plotting regression trees
 library(MASS)        # For linear discriminant analysis (LDA)
 library(randomForest) # For random forest models, optional for advanced analysis
 library(patchwork)
-
-```
+library(caret) # For logistic regression
 
 
 # Problem 1
 
 ## a)
-
-```{r, eval=T, error=TRUE, message=TRUE}
 
 
 # Load the Wages dataset
@@ -90,36 +76,6 @@ summary(model)
 # Assess the model's overall fit (e.g., R-squared) and individual predictors' significance (p-values)
 
 
-```
-The linear regression model demonstrates that experience, blue-collar job status, living in an SMSA, marital status, gender, and race significantly impact the logarithm of wages. Specifically, experience, being in an SMSA, and being married are associated with higher wages, while being in a blue-collar job or being black is linked to lower wages. Gender also plays a crucial role, with males earning significantly more than females, all else being equal. Although the model explains about 31.82% of the variability in log wages, suggesting it captures key factors affecting wages, there remains a substantial portion of the variability unexplained, indicating potential for model improvement or the existence of other influential factors not included in the model.
-
-## b)
-
-The prediction model, with a Multiple R-squared of 0.3182, indicates that it can explain a moderate proportion of the variance in logarithmic wages based on the predictors used, though a significant amount of variability remains unaccounted for. The Residual Standard Error (RSE) of 0.3814 points to the average deviation of the observed values from the fitted values, suggesting the model's predictions are reasonably close to the actual data, but there's room for improvement. The significant p-values for all predictors confirm their relevance in explaining wage differences, ensuring that the model's insights are statistically robust. However, to enhance predictive accuracy and account for more variance in wages, exploring additional predictors, interaction terms, or non-linear relationships could be beneficial.
-
-
-## c)
-
-This R function f implements a basic version of the k-Nearest Neighbors (k-NN) algorithm for regression. Here's a line-by-line explanation:
-
-f=function(x0,x,y,K=20): Defines a function f with inputs x0 (a new data point for which we want to predict the outcome), x (the matrix of features for the training data), y (the vector of outcomes for the training data), and K=20 (the number of nearest neighbors to consider, with a default value of 20).
-
-n <- nrow(x): Determines the number of observations in the training data by counting the rows in x.
-
-p <- ncol(x): Determines the number of features (predictors) in the training data by counting the columns in x.
-
-d <- matrix(0,n,1): Initializes a matrix d with n rows and 1 column filled with zeros. This is a placeholder for the distances between the new data point x0 and each point in the training data x.
-
-d <- sqrt(apply((x-matrix(x0,n,p,byrow=TRUE))^2,1,sum)): Calculates the Euclidean distance between x0 and each observation in x. This is done by subtracting x0 from each row in x (broadcasting x0 across n rows), squaring the differences, summing these squared differences across columns (apply(...,1,sum)), and taking the square root of these sums.
-
-o <- order(d)[1:K]: Orders the distances d in ascending order and selects the indices of the K smallest distances. These indices correspond to the K nearest neighbors of x0 in the training data.
-
-ypred <- mean(y[o]): Calculates the mean outcome y of the K nearest neighbors identified in the previous step. This mean value serves as the prediction for the new data point x0.
-
-return(ypred): Returns the predicted outcome for the new data point x0.
-
-In summary, this function implements the k-Nearest Neighbors algorithm for regression, predicting the outcome for a new observation based on the average outcome of its K nearest neighbors in the feature space.
-
 
 ## d)
 
@@ -170,11 +126,8 @@ print(paste("MSE for K=10:", mse_k10))
 print(paste("MSE for K=20:", mse_k20))
 
 
-```
-
 ## e)
 
-```{r, eval=T, error=TRUE, message=TRUE}
 
 # Define a function for k-fold cross-validation on the k-NN model
 cross_validate_knn <- function(K, folds, x, y) {
@@ -223,13 +176,8 @@ print(paste("Optimal MSE:", optimal_MSE))
 # You can then use this optimal K to make predictions and evaluate them as before
 
 
-
-
-```
-
 ## f)
 
-```{r, eval=T, error=TRUE, message=TRUE}
 
 # Assuming 'train_data' and 'test_data' are already defined
 x_train <- as.matrix(train_data[, c("sex_numeric", "ed")])
@@ -258,11 +206,10 @@ mse_ridge <- mean((predictions_ridge - y_test)^2)
 print(paste("LASSO MSE:", mse_lasso))
 print(paste("Ridge MSE:", mse_ridge))
 
-```
+
 
 ## g)
 
-```{r, eval=T, error=TRUE, message=TRUE}
 
 # Fit the GAM
 gam_model <- gam(lwage ~ s(ed) + sex_numeric, data = train_data)
@@ -278,9 +225,6 @@ mse_gam <- mean((predictions_gam - test_data$lwage)^2)
 
 print(paste("GAM MSE:", mse_gam))
 
-
-
-```
 
 ## h)
 
@@ -311,58 +255,172 @@ mse_pruned <- mean((predictions_pruned - test_data$lwage)^2)
 print(paste("MSE for the pruned tree:", mse_pruned))
 
 
-
-```
-
 # Problem 2
+# Determine the 75th percentile of lwage (log wage)
+lwage_75th_percentile <- quantile(Wages$lwage, 0.75)
 
-## a)
-
-```{r, eval=T, error=TRUE, message=TRUE}
-
-
-
-```
+# Create a new binary variable indicating whether an individual is in the top 25% of earners
+Wages$top_25_earner <- ifelse(Wages$lwage > lwage_75th_percentile, 1, 0)
 
 
-## b)
+Wages %>% glimpse()
+
+# Concatenate selected_predictors1 and selected_predictors2
+all_predictors <- c(selected_predictors1, selected_predictors2)
+
+# Initialize an empty list to store the plots
+plots_list <- list()
 
 
-```{r, eval=T, error=TRUE, message=TRUE}
+# ... and so on for other variables
+
+# Loop over the predictors and create a plot for each, storing each plot in the list
+for(predictor in all_predictors) {
+  plots_list[[predictor]] <- ggplot(Wages, aes(x = as.factor(top_25_earner), y = .data[[predictor]])) +
+    geom_boxplot() +
+    labs(title = paste(predictor, "by Top 25% Earners"), x = "Top 25% Earner", y = predictor)
+}
+
+
+combined_plot <- wrap_plots(plots_list, ncol = 3)
+print(combined_plot)
+
+## c) 
+set.seed(123) # For reproducibility
+
+# Splitting the data into training and test sets
+splitIndex <- createDataPartition(Wages$top_25_earner, p = .8, list = FALSE, times = 1)
+trainData <- Wages[splitIndex,]
+testData <- Wages[-splitIndex,]
+
+# Fit a logistic regression model
+logitModel <- glm(top_25_earner ~ exp + ed, data = trainData, family = "binomial")
+
+# Predict on the test set
+predicted_probs <- predict(logitModel, newdata = testData, type = "response")
+predicted_classes <- ifelse(predicted_probs > 0.5, 1, 0)
+
+# Evaluate the model
+confusionMatrix <- table(Predicted = predicted_classes, Actual = testData$top_25_earner)
+print(confusionMatrix)
+
+# Calculate accuracy
+accuracy <- sum(diag(confusionMatrix)) / sum(confusionMatrix)
+print(paste("Accuracy:", accuracy))
+
+
+## LDA
+library(MASS) # For lda function
+
+# Assuming testData and trainData from previous step are still valid
+# Perform Linear Discriminant Analysis
+ldaModel <- lda(top_25_earner ~ exp + ed, data = trainData)
+
+# Predict on the test set
+ldaPred <- predict(ldaModel, newdata = testData)
+predicted_classes_lda <- ldaPred$class
+
+# Evaluate the model
+confusionMatrixLDA <- table(Predicted = predicted_classes_lda, Actual = testData$top_25_earner)
+print(confusionMatrixLDA)
+
+# Calculate accuracy
+accuracyLDA <- sum(diag(confusionMatrixLDA)) / sum(confusionMatrixLDA)
+print(paste("LDA Accuracy:", accuracyLDA))
 
 
 
-```
+## e) Classification tree
+library(rpart)       # For building the classification tree
+library(rpart.plot)  # For plotting the tree
 
-## c)
+# Fit a classification tree model
+treeModel <- rpart(top_25_earner ~ exp + ed, data = trainData, method = "class")
 
-```{r, eval=T, error=TRUE, message=TRUE}
+# Plot the tree
+rpart.plot(treeModel, main = "Classification Tree for Top 25% Earners", type = 4, extra = 101)
 
+# Predict on the test set
+treePred <- predict(treeModel, newdata = testData, type = "class")
 
-```
+# Evaluate the model
+confusionMatrixTree <- table(Predicted = treePred, Actual = testData$top_25_earner)
+print(confusionMatrixTree)
 
-## d)
-
-```{r, eval=T, error=TRUE, message=TRUE}
-
-
-```
-
-## e)
-
-```{r, eval=T, error=TRUE, message=TRUE}
-
-
-
+# Calculate accuracy
+accuracyTree <- sum(diag(confusionMatrixTree)) / sum(confusionMatrixTree)
+print(paste("Tree Accuracy:", accuracyTree))
 
 
-```
 
 
-#### Session info
+library(ggplot2)
 
-Leave this part unchanged. The cell below prints which packages and versions were used for creating the html-file. 
+# Loop over each binary predictor to create proportion bar plots
+plots_list <- list()
+binary_predictors <- c("smsa", "married", "sex", "union", "black", "bluecol", "south")
 
-```{r, eval=T}
-sessionInfo()
-```
+for(predictor in binary_predictors) {
+  plots_list[[predictor]] <- ggplot(Wages, aes_string(x = predictor, fill = as.factor(top_25_earner))) +
+    geom_bar(position = "fill") +
+    labs(title = paste("Proportion of Top 25% Earners by", predictor),
+         x = predictor,
+         y = "Proportion") +
+    scale_fill_manual(values = c("gray", "blue"), 
+                      labels = c("Not Top 25% Earner", "Top 25% Earner")) +
+    theme_minimal()
+}
+
+# Print all the plots (assuming the 'patchwork' package is installed)
+library(patchwork)
+wrap_plots(plots_list, ncol = 3)
+
+table()
+
+
+for(predictor in binary_predictors) {
+  print(
+    ggplot(Wages, aes_string(x = predictor, fill = "top_25_earner")) +
+      geom_bar(position = "fill") +
+      labs(title = paste("Proportion of Top 25% Earners by", predictor),
+           x = predictor,
+           y = "Proportion") +
+      scale_fill_manual(values = c("gray", "blue"), 
+                        labels = c("Not Top 25% Earner", "Top 25% Earner")) +
+      theme_minimal()
+  )
+}
+
+ggplot(Wages, aes(x = smsa, fill = as.factor(top_25_earner))) +
+    geom_bar(position = "fill") +
+    labs(title = "Proportion of Top 25% Earners by smsa",
+         x = "smsa",
+         y = "Proportion") +
+    scale_fill_manual(values = c("gray", "blue"), 
+                      labels = c("Not Top 25% Earner", "Top 25% Earner")) +
+    theme_minimal()
+
+
+
+for(predictor in binary_predictors) {
+    plots_list[[predictor]] <- ggplot(Wages, aes_string(x = predictor, fill = "top_25_earner")) +
+    geom_bar(position = "fill") +
+    labs(title = paste("Proportion of Top 25% Earners by", predictor),
+            x = predictor,
+            y = "Proportion") +
+    scale_fill_manual(values = c("gray", "blue"), 
+                        labels = c("Not Top 25% Earner", "Top 25% Earner")) +
+    theme_minimal()
+}
+
+ggplot(Wages, aes(x= smsa, y= top_25_earner)) +
+  geom_jitter() +
+  theme_minimal() +
+  labs(title = "Scatter Plot of Predictor1 vs Class")
+
+Wages %>% glimpse()
+
+
+library(vcd)
+mosaic(~ smsa + top_25_earner, data=Wages)
+
