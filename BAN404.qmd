@@ -1,6 +1,7 @@
 ---
 title: "BAN404 - Mandatory"
 output: html_document
+toc: true
 ---
 
 ```{r setup, include = FALSE}
@@ -319,44 +320,191 @@ print(paste("MSE for the pruned tree:", mse_pruned))
 ## a)
 
 ```{r, eval=T, error=TRUE, message=TRUE}
+# Determine the 75th percentile of lwage (log wage)
+lwage_75th_percentile <- quantile(Wages$lwage, 0.75)
 
+# Create a new binary variable indicating whether an individual is in the top 25% of earners
+Wages$top_25_earner <- ifelse(Wages$lwage > lwage_75th_percentile, 1, 0)
 
-
+Wages %>% glimpse()
 ```
 
 
 ## b)
 
-
 ```{r, eval=T, error=TRUE, message=TRUE}
+# Continuous variables
+continuous_vars <- c("exp", "wks", "ed")
+# Categorical variables
+categorical_vars <- c("bluecol", "ind", "south", "smsa", "married", "sex", "union", "black")
 
+# Initialize an empty list to store plots for continuous and categorical variables
+plots_list_continuous <- list()
+plots_list_categorical <- list()
 
+# Generate plots for continuous variables
+for(var in continuous_vars) {
+  plots_list_continuous[[var]] <- ggplot(Wages, aes(x = as.factor(top_25_earner), y = .data[[var]])) +
+    geom_boxplot() +
+    labs(title = paste(var, "by Top 25% Earners"), x = "Top 25% Earner", y = var)
+}
+
+# Generate plots for categorical variables
+for(var in categorical_vars) {
+  plots_list_categorical[[var]] <- ggplot(Wages, aes(x = .data[[var]], fill = as.factor(top_25_earner))) +
+    geom_bar(position = "fill") +
+    labs(title = paste("Proportion of Top 25% Earners by", var), x = var, y = "Proportion") +
+    scale_fill_manual(values = c("gray", "blue"), labels = c("Not Top 25% Earner", "Top 25% Earner"))
+}
+
+# Combine and display the plots for continuous variables
+combined_plot_continuous <- wrap_plots(plots_list_continuous, ncol = 3)
+combined_plot_continuous
+
+# Combine and display the plots for categorical variables
+combined_plot_categorical <- wrap_plots(plots_list_categorical, ncol = 3)
+combined_plot_categorical
 
 ```
+
+When analyzing binary variables, I consider the proportion differences between top 25% earners and non-top 25% earners for each variable. When analyzing binary variables, I consider the proportion differences between top 25% earners and non-top 25% earners for each variable. Predictors, where one of the categories has a much higher or lower proportion of top earners, could be more informative.
+By analyzing the plots, I want to move forward with the following predictors: 
+bluecol
+married
+sex
+black
+Ed
+Exp
 
 ## c)
 
 ```{r, eval=T, error=TRUE, message=TRUE}
+set.seed(123) # For reproducibility
+
+# Splitting the data into training and test sets
+splitIndex <- createDataPartition(Wages$top_25_earner, p = .8, list = FALSE, times = 1)
+trainData <- Wages[splitIndex,]
+testData <- Wages[-splitIndex,]
+
+# Define the formula for the logistic regression model
+formula <- as.formula("top_25_earner ~ bluecol + married + sex + black + ed + exp")
+
+# Fit a logistic regression model using the defined formula
+logitModel <- glm(formula, data = trainData, family = "binomial")
+summary(logitModel)
+
+# Predict on the test set
+predicted_probs <- predict(logitModel, newdata = testData, type = "response")
+predicted_classes <- ifelse(predicted_probs > 0.5, 1, 0)
+
+# Evaluate the model
+confusionMatrix <- table(Predicted = predicted_classes, Actual = testData$top_25_earner)
+print(confusionMatrix)
+
+# Calculate accuracy
+accuracy <- sum(diag(confusionMatrix)) / sum(confusionMatrix)
+print(paste("Accuracy:", accuracy))
+
+TP_logit <- confusionMatrix[2, 2]
+FP_logit <- confusionMatrix[1, 2]
+FN_logit <- confusionMatrix[2, 1]
+TN_logit <- confusionMatrix[1, 1]
+
+precision_logit <- TP_logit / (TP_logit + FP_logit)
+recall_logit <- TP_logit / (TP_logit + FN_logit)
+f1_score_logit <- 2 * (precision_logit * recall_logit) / (precision_logit + recall_logit)
+
+cat("Logistic Regression - Precision:", precision_logit, "Recall:", recall_logit, "F1 Score:", f1_score_logit, "\n")
 
 
 ```
+
+The model efficiently identifies people not in the top 25% of earners. Although the model's accuracy is approximately 75.75%, which gives a general idea of its performance, it only partially represents its effectiveness, especially in the case of an imbalanced dataset. While the model shows a reasonable ability to detect non-top 25% earners (as indicated by a high number of true negatives), its precision is relatively low, which suggests a challenge in identifying the top 25% earners accurately without mistakenly classifying non-top 25% earners as being in the top quartile. The recall rate indicates that the model is better at capturing actual top 25% earners, but the balance between precision and recall shows that there is still room for improvement. Therefore, even though the model efficiently determines non-top 25% earners, it needs improvement in accurately identifying the top 25% earners.
 
 ## d)
 
 ```{r, eval=T, error=TRUE, message=TRUE}
+library(MASS) # For lda function
 
+# Assuming testData and trainData from previous step are still valid
+# Perform Linear Discriminant Analysis
+ldaModel <- lda(formula, data = trainData)
+
+# Predict on the test set
+ldaPred <- predict(ldaModel, newdata = testData)
+predicted_classes_lda <- ldaPred$class
+
+# Evaluate the model
+confusionMatrixLDA <- table(Predicted = predicted_classes_lda, Actual = testData$top_25_earner)
+print(confusionMatrixLDA)
+
+# Calculate accuracy
+accuracyLDA <- sum(diag(confusionMatrixLDA)) / sum(confusionMatrixLDA)
+print(paste("LDA Accuracy:", accuracyLDA))
+
+TP_lda <- confusionMatrixLDA[2, 2]
+FP_lda <- confusionMatrixLDA[1, 2]
+FN_lda <- confusionMatrixLDA[2, 1]
+TN_lda <- confusionMatrixLDA[1, 1]
+
+precision_lda <- TP_lda / (TP_lda + FP_lda)
+recall_lda <- TP_lda / (TP_lda + FN_lda)
+f1_score_lda <- 2 * (precision_lda * recall_lda) / (precision_lda + recall_lda)
+
+cat("LDA - Precision:", precision_lda, "Recall:", recall_lda, "F1 Score:", f1_score_lda, "\n")
+
+comparison_table <- data.frame(
+  Model = c("Logistic Regression", "LDA"),
+  accuracy = c(accuracy, accuracyLDA),
+  Precision = c(precision_logit, precision_lda),
+  Recall = c(recall_logit, recall_lda),
+  F1_Score = c(f1_score_logit, f1_score_lda)
+)
+
+# Print the comparison table
+print(comparison_table)
 
 ```
+
+The table presented above displays the outcome of the LDA prediction and compares it with logistic regression. In comparison to logistic regression, we observe slightly adverse marginal effects. All measures of accuracy, precision, recall, and F1 score have decreased.
+
+The decrease in these metrics for LDA suggests that, overall, it is performing slightly worse than Logistic Regression on this dataset. However, the differences are marginal, which means that in this specific case, both models are comparable in predicting the top 25% of earners, with Logistic Regression having a slight edge.
+
+LDA assumes that the predictor variables are normally distributed, have the same variance-covariance matrix across each group, have a linear relationship with the discriminant function, are statistically independent of each other, and the dependent variable is categorical and discrete. LDA also requires an adequate sample size, absence of outliers, and linearity between the means of different groups.
+In some instances, the underlying assumptions are not properly met, which is the cause of the lesser performance. 
 
 ## e)
 
 ```{r, eval=T, error=TRUE, message=TRUE}
+library(rpart)       # For building the classification tree
+library(rpart.plot)  # For plotting the tree
 
+# Fit a classification tree model
+treeModel <- rpart(formula, data = trainData, method = "class")
 
+# Plot the tree
+rpart.plot(treeModel, main = "Classification Tree for Top 25% Earners", type = 4, extra = 101)
 
+# Predict on the test set
+treePred <- predict(treeModel, newdata = testData, type = "class")
 
+# Evaluate the model
+confusionMatrixTree <- table(Predicted = treePred, Actual = testData$top_25_earner)
+print(confusionMatrixTree)
+
+# Calculate accuracy
+accuracyTree <- sum(diag(confusionMatrixTree)) / sum(confusionMatrixTree)
+print(paste("Tree Accuracy:", accuracyTree))
 
 ```
+
+The classification tree visually represents the decision rules inferred from the data. The nodes represent the points where the dataset is split based on the values of the predictor variables:
+
+The root node (the topmost node) splits on the 'ed' variable, representing individuals' education levels. If an individual's education level is less than 14 years, they are more likely not to be among the top 25% earners (as seen in the large proportion of the class labeled '0' in this node).
+
+Following the tree to the right, if an individual has 14 or more years of education, further splits are done based on 'exp' (years of experience), 'sex', and 'blue col' (whether they are blue-collar workers), each refining the classification of an individual as a top 25% earner or not.
+
+The leaf nodes (the bottom nodes) show the classification outcomes with the proportion of observations in each class. For example, one of the leaf nodes indicates that males with more than 17 years of experience and less than 38 years of experience, who are not blue-collar workers, are predicted to be top 25% earners.
 
 
 #### Session info
