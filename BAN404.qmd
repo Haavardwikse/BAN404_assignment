@@ -498,6 +498,8 @@ print(paste("Tree Accuracy:", accuracyTree))
 
 ```
 
+We observe that the accuracy of the model is not as good as that of LDA and Logistic Regression.
+
 The classification tree visually represents the decision rules inferred from the data. The nodes represent the points where the dataset is split based on the values of the predictor variables:
 
 The root node (the topmost node) splits on the 'ed' variable, representing individuals' education levels. If an individual's education level is less than 14 years, they are more likely not to be among the top 25% earners (as seen in the large proportion of the class labeled '0' in this node).

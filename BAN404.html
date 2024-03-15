@@ -743,6 +743,7 @@ Predicted   0   1
 <pre><code>[1] "Tree Accuracy: 0.747899159663866"</code></pre>
 </div>
 </div>
+<p>We observe that the accuracy of the model is not as good as that of LDA and Logistic Regression.</p>
 <p>The classification tree visually represents the decision rules inferred from the data. The nodes represent the points where the dataset is split based on the values of the predictor variables:</p>
 <p>The root node (the topmost node) splits on the ‘ed’ variable, representing individuals’ education levels. If an individual’s education level is less than 14 years, they are more likely not to be among the top 25% earners (as seen in the large proportion of the class labeled ‘0’ in this node).</p>
 <p>Following the tree to the right, if an individual has 14 or more years of education, further splits are done based on ‘exp’ (years of experience), ‘sex’, and ‘blue col’ (whether they are blue-collar workers), each refining the classification of an individual as a top 25% earner or not.</p>
